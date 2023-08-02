@@ -1,4 +1,4 @@
-package src
+package sqlite3
 
 import "core:fmt"
 import "core:strings"
