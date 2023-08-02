@@ -21,10 +21,11 @@ callback :: proc "c" (data: rawptr, a: c.int, b: [^]cstring, c: [^]cstring) -> R
 foreign sqlite {
 	libversion 			:: proc()                                    	-> cstring ---
 
-	open 				:: proc(filename: cstring, ppDb: ^^sqlite3) 	-> ResultCode ---
+	open 				:: proc(filename: cstring, db: ^^sqlite3) 	-> ResultCode ---
 	close 				:: proc(db: ^sqlite3) 							-> ResultCode ---
 	
-	prepare_v2 			:: proc(db: ^sqlite3, zSql: cstring, nByte: c.int, ppStmt: ^^Stmt, pzTail: ^cstring) -> ResultCode ---
+	prepare_v2 			:: proc(db: ^sqlite3, sql: cstring, nbytes: c.int, satement: ^^Stmt, tail: ^cstring) 								-> ResultCode ---
+	prepare_v3  		:: proc(db: ^sqlite3, sql: cstring, nbytes : c.int, flags: PrepareFlag, statement: ^^Stmt, tail: ^cstring) 	-> ResultCode ---
 	
 	step 				:: proc(stmt: ^Stmt) 							-> ResultCode ---
 	finalize 			:: proc(stmt: ^Stmt) 							-> ResultCode ---
@@ -176,6 +177,20 @@ sqlite3 :: struct {
 
   	nExtension: c.int,              /* Number of loaded extensions */
  	aExtension: ^^rawptr,          /* Array of shared library handles */
+}
+
+PrepareFlag :: enum c.int {
+    // Prepared statment hint that the statement is likely to be retained for a
+    // long time and probably re-used many times. Without this flag,
+    // sqlite3_prepare_v3/sqlite3_prepare16_v3 assume that the prepared statement
+    // will be used just once or at most a few times and then destroyed (finalize).
+    // The current implementation acts on this by avoiding use of lookaside memory.
+    PERSISTENT = 0x01,
+    // No-op, do not use
+    NORMALIZE  = 0x02,
+    // Prepared statement flag that causes the SQL compiler to return an error
+    // if the statement uses any virtual tables.
+    NO_VTAB    = 0x04,
 }
 
 ResultCode :: enum c.int {
