@@ -7,7 +7,7 @@ when ODIN_OS == .Windows {
 	foreign import sqlite 	"sqlite3.lib" 
 
 } else when ODIN_OS == .Linux {
-	foreign import sqlite 	"sqlite3.a"
+	foreign import sqlite 	"system:sqlite3"
 	foreign import 			"system:pthread"
 	foreign import 			"system:dl"
 
