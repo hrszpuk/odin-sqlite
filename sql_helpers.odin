@@ -29,7 +29,7 @@ db_check :: proc(err: Result_Code, loc := #caller_location) {
 
 // does not do caching
 db_execute_simple :: proc(cmd: string) -> (err: Result_Code) {
-	data := mem.raw_string_data(cmd)
+	data := strings.clone_to_cstring(cmd)
 	stmt: ^Stmt
 	prepare_v2(db, data, i32(len(cmd)), &stmt, nil) or_return
 	db_run(stmt) or_return
@@ -70,7 +70,7 @@ db_cache_prepare :: proc(cmd: string) -> (stmt: ^Stmt, err: Result_Code) {
 	if existing_stmt := db_cache[cmd]; existing_stmt != nil {
 		stmt = existing_stmt
 	} else {
-		data := mem.raw_string_data(cmd);
+		data := strings.clone_to_cstring(cmd)
 		prepare_v2(db, data, i32(len(cmd)), &stmt, nil); 
 		db_cache[cmd] = stmt
 	}
@@ -147,7 +147,7 @@ db_bind :: proc(stmt: ^Stmt, args: ..any) -> (err: Result_Code) {
 				text, valid := reflect.as_string(arg)
 				
 				if valid {
-					data := mem.raw_string_data(text)
+					data := strings.clone_to_cstring(text)
 					bind_text(stmt, i32(index), data, i32(len(text)), STATIC) or_return
 				} else {
 					return .ERROR
