@@ -3,9 +3,17 @@ package sqlite3
 import "core:c"
 import "core:os"
 
-when ODIN_OS == .Windows do foreign import sqlite { "sqlite3.lib" }
-when ODIN_OS == .Linux do foreign import sqlite { "sqlite3.a", "system:pthread", "system:dl" }
-when ODIN_OS == .Darwin do foreign import sqlite { "sqlite3.o" }
+when ODIN_OS == .Windows {
+	foreign import sqlite "sqlite3.lib" 
+
+} else when ODIN_OS == .Linux {
+	foreign import sqlite "sqlite3.a"
+	foreign import "system:pthread"
+	foreign import "system:dl"
+	
+} else when ODIN_OS == .Darwin {
+	foreign import sqlite "sqlite3.o" 
+} 
 
 callback :: proc"c"(data: rawptr, a: c.int, b: [^]cstring, c: [^]cstring) -> ResultCode
 
