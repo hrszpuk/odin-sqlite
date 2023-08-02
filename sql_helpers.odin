@@ -6,8 +6,8 @@ import "core:runtime"
 import "core:reflect"
 import "core:mem"
 
-Result_Code :: sql.ResultCode
-db: ^sql.sqlite3
+Result_Code :: ResultCode
+db: ^sqlite3
 db_cache: map[string]^Stmt
 
 db_init :: proc(name: cstring) -> (err: Result_Code) {
