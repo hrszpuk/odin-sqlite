@@ -117,7 +117,7 @@ db_bind :: proc(stmt: ^Stmt, args: ..any) -> (err: Result_Code) {
 				i32(index), 
 				cast(^u8) arg.data, 
 				i32(slice.len), 
-				sql.STATIC,
+				STATIC,
 			) or_return
 			continue
 		}
