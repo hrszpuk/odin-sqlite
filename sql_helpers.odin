@@ -5,10 +5,8 @@ import "core:strings"
 import "core:runtime"
 import "core:reflect"
 import "core:mem"
-import sql "../sqlite3"
 
 Result_Code :: sql.ResultCode
-Stmt :: sql.Stmt
 db: ^sql.sqlite3
 db_cache: map[string]^Stmt
 
