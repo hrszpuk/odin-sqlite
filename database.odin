@@ -11,9 +11,17 @@ Database :: struct {
 	cache: map[string]^Stmt,
 }
 
-make_database :: proc(name: string) -> (db: ^Database, err: ResultCode) {
+make_db :: proc(name: string) -> (db: ^Database, err: ResultCode) {
 	db = new(Database)
 	cname := strings.clone_to_cstring(name)
 	err = open(cname, &db.connection) 
+    delete(cname)
+    return
+}
+
+destroy_db :: proc(db: ^Database) -> (err: ResultCode) {
+    err = close(db.connection)
+    delete(db.cache)
+    free(db)
     return
 }
