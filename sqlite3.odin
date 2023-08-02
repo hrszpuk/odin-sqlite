@@ -21,30 +21,30 @@ callback :: proc "c" (data: rawptr, a: c.int, b: [^]cstring, c: [^]cstring) -> R
 foreign sqlite {
 	libversion 			:: proc()                                    	-> cstring ---
 
-	open 				:: proc(filename: cstring, db: ^^sqlite3) 	-> ResultCode ---
-	close 				:: proc(db: ^sqlite3) 							-> ResultCode ---
+	open 				:: proc(filename: cstring, db: ^^Conn) 			-> ResultCode ---
+	close 				:: proc(db: ^Conn) 								-> ResultCode ---
 	
-	prepare_v2 			:: proc(db: ^sqlite3, sql: cstring, nbytes: c.int, satement: ^^Stmt, tail: ^cstring) 								-> ResultCode ---
-	prepare_v3  		:: proc(db: ^sqlite3, sql: cstring, nbytes : c.int, flags: PrepareFlag, statement: ^^Stmt, tail: ^cstring) 	-> ResultCode ---
+	exec 				:: proc(db: ^Conn, sql: cstring, call: callback, arg: rawptr, errmsg: ^cstring) 							-> ResultCode ---
+	prepare_v2 			:: proc(db: ^Conn, sql: cstring, nbytes: c.int, satement: ^^Stmt, tail: ^cstring) 							-> ResultCode ---
+	prepare_v3  		:: proc(db: ^Conn, sql: cstring, nbytes : c.int, flags: PrepareFlag, statement: ^^Stmt, tail: ^cstring) 	-> ResultCode ---
 	
 	step 				:: proc(stmt: ^Stmt) 							-> ResultCode ---
 	finalize 			:: proc(stmt: ^Stmt) 							-> ResultCode ---
 
-	last_insert_rowid 	:: proc(db: ^sqlite3) 		-> i64 ---
+	last_insert_rowid 	:: proc(db: ^Conn) 					-> i64 ---
 	
-	column_name 		:: proc(stmt: ^Stmt, i_col: c.int) -> cstring ---
-	column_blob 		:: proc(stmt: ^Stmt, i_col: c.int) -> ^byte ---
-	column_text 		:: proc(stmt: ^Stmt, i_col: c.int) -> cstring ---
-	column_bytes 		:: proc(stmt: ^Stmt, i_col: c.int) -> c.int ---
+	column_name 		:: proc(stmt: ^Stmt, i_col: c.int) 	-> cstring ---
+	column_blob 		:: proc(stmt: ^Stmt, i_col: c.int) 	-> ^byte ---
+	column_text 		:: proc(stmt: ^Stmt, i_col: c.int) 	-> cstring ---
+	column_bytes 		:: proc(stmt: ^Stmt, i_col: c.int) 	-> c.int ---
 	
-	column_int 			:: proc(stmt: ^Stmt, i_col: c.int) -> c.int ---
-	column_double 		:: proc(stmt: ^Stmt, i_col: c.int) -> c.double ---
-	column_type 		:: proc(stmt: ^Stmt, i_col: c.int) -> c.int ---
+	column_int 			:: proc(stmt: ^Stmt, i_col: c.int) 	-> c.int ---
+	column_double 		:: proc(stmt: ^Stmt, i_col: c.int) 	-> c.double ---
+	column_type 		:: proc(stmt: ^Stmt, i_col: c.int) 	-> c.int ---
 	
-	errcode 			:: proc(db: ^sqlite3) -> c.int ---
-	extended_errcode 	:: proc(db: ^sqlite3) -> c.int ---
-	errmsg 				:: proc(db: ^sqlite3) -> cstring ---
-	exec 				:: proc(db: ^sqlite3, sql: cstring, call: callback, arg: rawptr, errmsg: [^]c.char) -> ResultCode ---;
+	errcode 			:: proc(db: ^Conn) -> c.int ---
+	extended_errcode 	:: proc(db: ^Conn) -> c.int ---
+	errmsg 				:: proc(db: ^Conn) -> cstring ---
 
 	reset 				:: proc(stmt: ^Stmt) -> ResultCode ---
 	clear_bindings 		:: proc(stmt: ^Stmt) -> ResultCode ---
@@ -72,7 +72,7 @@ foreign sqlite {
 	) -> ResultCode ---
 
 	trace_v2 :: proc(
-		db: ^sqlite3, 
+		db: ^Conn, 
 		mask: TraceFlags,
 		call: proc "c" (mask: TraceFlag, x, y, z: rawptr) -> c.int,
 		ctx: rawptr,
@@ -117,7 +117,7 @@ Mutex 	:: struct {}
 Db 		:: struct {}
 Pgno 	:: struct {}
 
-sqlite3 :: struct {
+Conn :: struct {
 	pVfs: ^Vfs,           			/* OS Interface */
   	pVdbe: ^Vdbe,          			/* List of active virtual machines */
  	pDfltColl: ^CollSeq,        	/* BINARY collseq for the database encoding */
