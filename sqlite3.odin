@@ -14,7 +14,7 @@ foreign sqlite {
 	open :: proc(filename: cstring, ppDb: ^^sqlite3) -> ResultCode ---
 	close :: proc(db: ^sqlite3) -> ResultCode ---
 	
-	prepare_v2 :: proc(db: ^sqlite3, zSql: ^c.char, nByte: c.int, ppStmt: ^^Stmt, pzTail: ^cstring) -> ResultCode ---
+	prepare_v2 :: proc(db: ^sqlite3, zSql: cstring, nByte: c.int, ppStmt: ^^Stmt, pzTail: ^cstring) -> ResultCode ---
 	
 	step :: proc(stmt: ^Stmt) -> ResultCode ---
 	finalize :: proc(stmt: ^Stmt) -> ResultCode ---
@@ -46,7 +46,7 @@ foreign sqlite {
 	bind_text :: proc(
 		stmt: ^Stmt, 
 		index: c.int, 
-		first: ^c.char, 
+		first: cstring, 
 		byte_count: c.int, 
 		lifetime: uintptr,
 		// lifetime: proc "c" (data: rawptr),
