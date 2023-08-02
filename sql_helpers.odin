@@ -5,22 +5,20 @@ import "core:strings"
 import "core:runtime"
 import "core:reflect"
 import "core:mem"
-
-Result_Code :: ResultCode
 db: ^Conn
 db_cache: map[string]^Stmt
 
-db_init :: proc(name: cstring) -> (err: Result_Code) {
+db_init :: proc(name: cstring) -> (err: ResultCode) {
 	open(name, &db) or_return
 	return
 }
 
-db_destroy :: proc() -> (err: Result_Code) {
+db_destroy :: proc() -> (err: ResultCode) {
 	close(db) or_return
 	return
 }
 
-db_check :: proc(err: Result_Code, loc := #caller_location) {
+db_check :: proc(err: ResultCode, loc := #caller_location) {
 	if err == .ERROR || err == .CONSTRAINT || err == .MISUSE {
 		text := fmt.tprintf("%s %v %s", err, errmsg(db), loc)
 		panic(text)
@@ -28,7 +26,7 @@ db_check :: proc(err: Result_Code, loc := #caller_location) {
 }
 
 // does not do caching
-db_execute_simple :: proc(cmd: string) -> (err: Result_Code) {
+db_execute_simple :: proc(cmd: string) -> (err: ResultCode) {
 	data := strings.clone_to_cstring(cmd)
 	stmt: ^Stmt
 	prepare_v2(db, data, i32(len(cmd)), &stmt, nil) or_return
@@ -38,7 +36,7 @@ db_execute_simple :: proc(cmd: string) -> (err: Result_Code) {
 }
 
 // execute cached with args
-db_execute :: proc(cmd: string, args: ..any) -> (err: Result_Code) {
+db_execute :: proc(cmd: string, args: ..any) -> (err: ResultCode) {
 	stmt := db_cache_prepare(cmd) or_return
 	db_bind(stmt, ..args) or_return
 	db_bind_run(stmt) or_return
@@ -46,7 +44,7 @@ db_execute :: proc(cmd: string, args: ..any) -> (err: Result_Code) {
 }
 
 // simple run through statement
-db_run :: proc(stmt: ^Stmt) -> (err: Result_Code) {
+db_run :: proc(stmt: ^Stmt) -> (err: ResultCode) {
 	for {
 		result := step(stmt)
 
@@ -66,7 +64,7 @@ db_cache_cap :: proc(cap: int) {
 }
 
 // return cached stmt or create one
-db_cache_prepare :: proc(cmd: string) -> (stmt: ^Stmt, err: Result_Code) {
+db_cache_prepare :: proc(cmd: string) -> (stmt: ^Stmt, err: ResultCode) {
 	if existing_stmt := db_cache[cmd]; existing_stmt != nil {
 		stmt = existing_stmt
 	} else {
@@ -90,7 +88,7 @@ db_cache_destroy :: proc() {
 // step once	-> 
 // struct getters	
 
-db_bind_run :: proc(stmt: ^Stmt) -> (err: Result_Code) {
+db_bind_run :: proc(stmt: ^Stmt) -> (err: ResultCode) {
 	db_run(stmt) or_return
 	reset(stmt) or_return
 	clear_bindings(stmt) or_return
@@ -98,7 +96,7 @@ db_bind_run :: proc(stmt: ^Stmt) -> (err: Result_Code) {
 }
 
 // bind primitive arguments to input statement
-db_bind :: proc(stmt: ^Stmt, args: ..any) -> (err: Result_Code) {
+db_bind :: proc(stmt: ^Stmt, args: ..any) -> (err: ResultCode) {
 	for arg, index in args {
 		// index starts at 1 in binds
 		index := index + 1
@@ -163,7 +161,7 @@ db_bind :: proc(stmt: ^Stmt, args: ..any) -> (err: Result_Code) {
 
 // data from the struct has to match wanted column names
 // changes the cmd string to the arg which should be a struct
-db_select :: proc(cmd_end: string, struct_arg: any, args: ..any) -> (err: Result_Code) {
+db_select :: proc(cmd_end: string, struct_arg: any, args: ..any) -> (err: ResultCode) {
 	b := strings.builder_make_len_cap(0, 128)
 	defer strings.builder_destroy(&b)
 
@@ -209,7 +207,7 @@ db_select :: proc(cmd_end: string, struct_arg: any, args: ..any) -> (err: Result
 	return
 }
 
-db_any_column :: proc(stmt: ^Stmt, column_index: i32, arg: any) -> (err: Result_Code) {
+db_any_column :: proc(stmt: ^Stmt, column_index: i32, arg: any) -> (err: ResultCode) {
 	ti := runtime.type_info_base(type_info_of(arg.id))
 	#partial switch info in ti.variant {
 		case runtime.Type_Info_Integer: {
@@ -258,7 +256,7 @@ db_any_column :: proc(stmt: ^Stmt, column_index: i32, arg: any) -> (err: Result_
 }
 
 // auto insert INSERT INTO cmd_names VALUES (...)
-db_insert :: proc(cmd_names: string, args: ..any) -> (err: Result_Code) {
+db_insert :: proc(cmd_names: string, args: ..any) -> (err: ResultCode) {
 	b := strings.builder_make_len_cap(0, 128)
 	defer strings.builder_destroy(&b)
 
