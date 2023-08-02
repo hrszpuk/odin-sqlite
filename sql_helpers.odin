@@ -11,18 +11,18 @@ db: ^sqlite3
 db_cache: map[string]^Stmt
 
 db_init :: proc(name: cstring) -> (err: Result_Code) {
-	sql.open(name, &db) or_return
+	open(name, &db) or_return
 	return
 }
 
 db_destroy :: proc() -> (err: Result_Code) {
-	sql.close(db) or_return
+	close(db) or_return
 	return
 }
 
 db_check :: proc(err: Result_Code, loc := #caller_location) {
 	if err == .ERROR || err == .CONSTRAINT || err == .MISUSE {
-		text := fmt.tprintf("%s %v %s", err, sql.errmsg(db), loc)
+		text := fmt.tprintf("%s %v %s", err, errmsg(db), loc)
 		panic(text)
 	}
 }
@@ -31,9 +31,9 @@ db_check :: proc(err: Result_Code, loc := #caller_location) {
 db_execute_simple :: proc(cmd: string) -> (err: Result_Code) {
 	data := mem.raw_string_data(cmd)
 	stmt: ^Stmt
-	sql.prepare_v2(db, data, i32(len(cmd)), &stmt, nil) or_return
+	prepare_v2(db, data, i32(len(cmd)), &stmt, nil) or_return
 	db_run(stmt) or_return
-	sql.finalize(stmt) or_return
+	finalize(stmt) or_return
 	return
 }
 
@@ -48,7 +48,7 @@ db_execute :: proc(cmd: string, args: ..any) -> (err: Result_Code) {
 // simple run through statement
 db_run :: proc(stmt: ^Stmt) -> (err: Result_Code) {
 	for {
-		result := sql.step(stmt)
+		result := step(stmt)
 
 		if result == .DONE {
 			break
@@ -71,7 +71,7 @@ db_cache_prepare :: proc(cmd: string) -> (stmt: ^Stmt, err: Result_Code) {
 		stmt = existing_stmt
 	} else {
 		data := mem.raw_string_data(cmd);
-		sql.prepare_v2(db, data, i32(len(cmd)), &stmt, nil); 
+		prepare_v2(db, data, i32(len(cmd)), &stmt, nil); 
 		db_cache[cmd] = stmt
 	}
 
@@ -81,7 +81,7 @@ db_cache_prepare :: proc(cmd: string) -> (stmt: ^Stmt, err: Result_Code) {
 // strings are not deleted
 db_cache_destroy :: proc() {
 	for _, stmt in db_cache {
-		sql.finalize(stmt)
+		finalize(stmt)
 	}
 }
 
@@ -92,8 +92,8 @@ db_cache_destroy :: proc() {
 
 db_bind_run :: proc(stmt: ^Stmt) -> (err: Result_Code) {
 	db_run(stmt) or_return
-	sql.reset(stmt) or_return
-	sql.clear_bindings(stmt) or_return
+	reset(stmt) or_return
+	clear_bindings(stmt) or_return
 	return
 }
 
@@ -105,14 +105,14 @@ db_bind :: proc(stmt: ^Stmt, args: ..any) -> (err: Result_Code) {
 		ti := runtime.type_info_base(type_info_of(arg.id))
 
 		if arg == nil {
-			sql.bind_null(stmt, i32(index)) or_return
+			bind_null(stmt, i32(index)) or_return
 			continue
 		}
 
 		// only allow slice of bytes
 		if arg.id == []byte {
 			slice := cast(^mem.Raw_Slice) arg.data
-			sql.bind_blob(
+			bind_blob(
 				stmt, 
 				i32(index), 
 				cast(^u8) arg.data, 
@@ -128,7 +128,7 @@ db_bind :: proc(stmt: ^Stmt, args: ..any) -> (err: Result_Code) {
 				value, valid := reflect.as_i64(arg)
 				
 				if valid {
-					sql.bind_int(stmt, i32(index), i32(value)) or_return
+					bind_int(stmt, i32(index), i32(value)) or_return
 				} else {
 					return .ERROR
 				}
@@ -137,7 +137,7 @@ db_bind :: proc(stmt: ^Stmt, args: ..any) -> (err: Result_Code) {
 			case runtime.Type_Info_Float: {
 				value, valid := reflect.as_f64(arg)
 				if valid {
-					sql.bind_double(stmt, i32(index), f64(value)) or_return
+					bind_double(stmt, i32(index), f64(value)) or_return
 				} else {
 					return .ERROR					
 				}
@@ -148,7 +148,7 @@ db_bind :: proc(stmt: ^Stmt, args: ..any) -> (err: Result_Code) {
 				
 				if valid {
 					data := mem.raw_string_data(text)
-					sql.bind_text(stmt, i32(index), data, i32(len(text)), sql.STATIC) or_return
+					bind_text(stmt, i32(index), data, i32(len(text)), STATIC) or_return
 				} else {
 					return .ERROR
 				}
@@ -189,7 +189,7 @@ db_select :: proc(cmd_end: string, struct_arg: any, args: ..any) -> (err: Result
 	db_bind(stmt, ..args) or_return
 
 	for {
-		result := sql.step(stmt)
+		result := step(stmt)
 
 		if result == .DONE {
 			break
@@ -213,7 +213,7 @@ db_any_column :: proc(stmt: ^Stmt, column_index: i32, arg: any) -> (err: Result_
 	ti := runtime.type_info_base(type_info_of(arg.id))
 	#partial switch info in ti.variant {
 		case runtime.Type_Info_Integer: {
-			value := sql.column_int(stmt, column_index)
+			value := column_int(stmt, column_index)
 			// TODO proper i64
 
 			switch arg.id {
@@ -225,7 +225,7 @@ db_any_column :: proc(stmt: ^Stmt, column_index: i32, arg: any) -> (err: Result_
 		}	
 
 		case runtime.Type_Info_Float: {
-			value := sql.column_double(stmt, column_index)
+			value := column_double(stmt, column_index)
 
 			switch arg.id {
 				case f32: (cast(^f32) arg.data)^ = f32(value)
@@ -234,7 +234,7 @@ db_any_column :: proc(stmt: ^Stmt, column_index: i32, arg: any) -> (err: Result_
 		}
 
 		case runtime.Type_Info_String: {
-			value := sql.column_text(stmt, column_index)
+			value := column_text(stmt, column_index)
 
 			switch arg.id {
 				case string: {
