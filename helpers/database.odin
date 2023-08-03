@@ -128,9 +128,20 @@ bind :: proc(stmt: ^sql.Stmt, args: ..any) -> (err: sql.ResultCode) {
 	return
 }
 
-
 set_cache_cap :: proc(db: ^Database, cap: int) {
 	db.cache = make(map[string]^sql.Stmt, cap)		
+}
+
+prepare :: proc(db: ^Database, cmd: string) -> (stmt: ^sql.Stmt, err: sql.ResultCode) {
+	if existing_stmt := db.cache[cmd]; existing_stmt != nil {
+		stmt = existing_stmt
+	} else {
+		data := strings.clone_to_cstring(cmd)
+		sql.prepare_v2(db.connection, data, i32(len(cmd)), &stmt, nil); 
+		db.cache[cmd] = stmt
+	}
+
+	return
 }
 
 destroy_cache :: proc(db: ^Database) {
