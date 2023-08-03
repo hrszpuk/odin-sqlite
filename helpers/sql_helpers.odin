@@ -1,10 +1,12 @@
-package sqlite3
+/*package sqlite3_helpers
 
 import "core:fmt"
 import "core:strings"
 import "core:runtime"
 import "core:reflect"
 import "core:mem"
+import _ ".."
+
 db: ^Conn
 db_cache: map[string]^Stmt
 
