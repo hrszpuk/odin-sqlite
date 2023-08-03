@@ -27,3 +27,25 @@ destroy_db :: proc(db: ^Database) -> (err: sql.ResultCode) {
     free(db)
     return
 }
+
+exec :: proc{
+    exec_cache,
+    exec_no_cache,
+}
+
+exec_no_cache :: proc(db: ^Database, cmd: string) -> (err: sql.ResultCode) {
+	data := strings.clone_to_cstring(cmd)
+	stmt: ^sql.Stmt
+	sql.prepare_v2(db.connection, data, i32(len(cmd)), &stmt, nil) or_return
+	//db_run(stmt) or_return
+	//finalize(stmt) or_return
+	return
+}
+
+exec_cache :: proc(db: ^Database, cmd: string, args: ..any) -> (err: sql.ResultCode) {
+    //stmt := db_cache_prepare(cmd) or_return
+	//db_bind(stmt, ..args) or_return
+	//db_bind_run(stmt) or_return
+    return
+}
+
