@@ -49,3 +49,16 @@ exec_cache :: proc(db: ^Database, cmd: string, args: ..any) -> (err: sql.ResultC
     return
 }
 
+run :: proc(stmt: ^sql.Stmt) -> (err: sql.ResultCode) {
+	for {
+		result := sql.step(stmt)
+
+		if result == .DONE {
+			break
+		} else if result != .ROW {
+			return result
+		}
+	}
+
+	return
+}
