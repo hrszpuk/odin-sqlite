@@ -127,3 +127,14 @@ bind :: proc(stmt: ^sql.Stmt, args: ..any) -> (err: sql.ResultCode) {
 	}
 	return
 }
+
+
+set_cache_cap :: proc(db: ^Database, cap: int) {
+	db.cache = make(map[string]^sql.Stmt, cap)		
+}
+
+destroy_cache :: proc(db: ^Database) {
+	for key, value in db.cache {
+		sql.finalize(value)
+	}
+}
