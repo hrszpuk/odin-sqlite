@@ -1,5 +1,6 @@
-# odin-sqlite + fixed by Remy ;)
-Simple Sqlite3 bindings for [Odin](https://odin-lang.org/).
+# Remy's odin-sqlite bindings
+Simple, incomplete, working Sqlite3 bindings for [Odin](https://odin-lang.org/).
+
 So the original library is over 2 years old and doesn't work?
 I'm fixing it for my own project. However, if you find this and want to use odin-sqlite I would recommend using this fixed version as I did not manage to get the original working without modifying the source code.
 
